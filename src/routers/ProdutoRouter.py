@@ -1,6 +1,6 @@
 #Roberto Antunes Souza
 from fastapi import APIRouter
-from domain.entities.Produto import Produto
+from domain.schemas.ProdutoSchema import Produto
 
 router = APIRouter()
 
