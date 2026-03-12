@@ -2,19 +2,22 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
-class ClienteCreate(BaseModel):
+class ProdutoCreate(BaseModel):
     nome: str
-    cpf: str
-    telefone: str
+    descricao: str
+    foto: bytes = None
+    valor_unitario: float
 
-class ClienteUpdate(BaseModel):
+class ProdutoUpdate(BaseModel):
     nome: Optional[str] = None
-    cpf: Optional[str] = None
-    telefone: Optional[str] = None
+    descricao: Optional[str] = None
+    foto: Optional[bytes] = None
+    valor_unitario: Optional[float] = None
 
-class ClienteResponse(BaseModel):
+class ProdutoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     nome: str
-    cpf: str
-    telefone: str
+    descricao: str
+    foto: bytes
+    valor_unitario: float

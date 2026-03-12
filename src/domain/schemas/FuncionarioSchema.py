@@ -2,7 +2,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
-class Funcionario(BaseModel):
+class FuncionarioCreate(BaseModel):
     id_funcionario: int = None
     nome: str
     matricula: str
