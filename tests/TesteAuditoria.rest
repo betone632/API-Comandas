@@ -1,6 +1,6 @@
 ### Roberto Antunes Souza
 ### token gerado
-@access_token = seuToken
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMDAxIiwiaWQiOjMsImdydXBvIjoxLCJleHAiOjE3NzUwODg0NjEsInR5cGUiOiJhY2Nlc3MifQ.dAS623CAKsObtD9D9J5PlR-GhqgR7MSqGcNUAAG8F54
 ### Listar ações e recursos já utilizados e disponíveis para filtro
 GET http://localhost:8000/auditoria/acoes
 Authorization: Bearer {{access_token}}
