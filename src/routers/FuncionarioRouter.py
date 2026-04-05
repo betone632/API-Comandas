@@ -142,10 +142,10 @@ async def put_funcionario(
         # Verifica se está tentando atualizar para um CPF que já existe
         if funcionario_data.cpf and funcionario_data.cpf != funcionario.cpf:
             existing_funcionario = db.query(FuncionarioDB).filter(FuncionarioDB.cpf == funcionario_data.cpf).first()
-        if existing_funcionario:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Já existe um funcionário com este CPF"
-        )
+            if existing_funcionario:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Já existe um funcionário com este CPF"
+                )
         # Hash da senha se fornecida nova senha
         if funcionario_data.senha:
             funcionario_data.senha = get_password_hash(funcionario_data.senha)
@@ -167,8 +167,6 @@ async def put_funcionario(
             setattr(funcionario, field, value)
 
         db.commit()
-        db.refresh(funcionario)
-
         db.refresh(funcionario)
         
         # Depois de tudo executado e antes do return, registra a ação na auditoria

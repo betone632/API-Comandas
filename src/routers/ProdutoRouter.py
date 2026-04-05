@@ -1,7 +1,10 @@
 #Roberto Antunes Souza
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from typing import List
+
+# Services
+from services.AuditoriaService import AuditoriaService
 
 # Domain Schemas
 from domain.schemas.ProdutoSchema import (
@@ -35,8 +38,10 @@ async def get_produto(db: Session = Depends(get_db)):
         )
 
 @router.get("/produto/", response_model=List[ProdutoResponse], tags=["Produto"], status_code=status.HTTP_200_OK)
-async def get_produto(db: Session = Depends(get_db),
-current_user: ProdutoAuth = Depends(get_current_active_user)
+async def get_produto(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: ProdutoAuth = Depends(get_current_active_user)
 ):
     """Retorna todos os produtos, autenticado"""
     try:
@@ -51,8 +56,11 @@ current_user: ProdutoAuth = Depends(get_current_active_user)
 
 
 @router.get("/produto/{id}", response_model=ProdutoResponse, tags=["Produto"], status_code=status.HTTP_200_OK)
-async def get_produto(id: int, db: Session = Depends(get_db),
-current_user: ProdutoAuth = Depends(get_current_active_user)
+async def get_produto(
+    request: Request,
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: ProdutoAuth = Depends(get_current_active_user)
 ):
     """Retorna um produto específico pelo ID, autenticado"""
     try:
@@ -76,8 +84,11 @@ current_user: ProdutoAuth = Depends(get_current_active_user)
 
 
 @router.post("/produto/", response_model=ProdutoResponse, status_code=status.HTTP_201_CREATED, tags=["Produto"])
-async def post_produto(produto_data: ProdutoCreate, db: Session = Depends(get_db),
-current_user: ProdutoAuth = Depends(require_group([1]))
+async def post_produto(
+    request: Request,
+    produto_data: ProdutoCreate,
+    db: Session = Depends(get_db),
+    current_user: ProdutoAuth = Depends(require_group([1]))
 ):
     """Cria um novo produto, autenticado e grupo 1"""
     try:
@@ -94,6 +105,18 @@ current_user: ProdutoAuth = Depends(require_group([1]))
         db.commit()
         db.refresh(novo_produto)
 
+        # Depois de tudo executado e antes do return, registra a ação na auditoria
+        AuditoriaService.registrar_acao(
+            db=db,
+            funcionario_id=current_user.id,
+            acao="CREATE",
+            recurso="PRODUTO",
+            recurso_id=novo_produto.id,
+            dados_antigos=None,
+            dados_novos=novo_produto,
+            request=request
+        )
+
         return novo_produto
 
     except Exception as e:
@@ -105,8 +128,12 @@ current_user: ProdutoAuth = Depends(require_group([1]))
 
 
 @router.put("/produto/{id}", response_model=ProdutoResponse, tags=["Produto"], status_code=status.HTTP_200_OK)
-async def put_produto(id: int, produto_data: ProdutoUpdate, db: Session = Depends(get_db),
-current_user: ProdutoAuth = Depends(require_group([1]))
+async def put_produto(
+    request: Request,
+    id: int,
+    produto_data: ProdutoUpdate,
+    db: Session = Depends(get_db),
+    current_user: ProdutoAuth = Depends(require_group([1]))
 ):
     """Atualiza um produto existente, precisa estar autenticado e grupo 1"""
     try:
@@ -118,6 +145,11 @@ current_user: ProdutoAuth = Depends(require_group([1]))
                 detail="Produto não encontrado"
             )
 
+        # armazena uma copia do objeto com os dados atuais, para salvar na auditoria
+        # não pode manter referencia com produto, para que o auditoria possa comparar
+        # por isso a cópia do __dict__
+        dados_antigos_obj = produto.__dict__.copy()
+
         update_data = produto_data.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():
@@ -125,6 +157,18 @@ current_user: ProdutoAuth = Depends(require_group([1]))
 
         db.commit()
         db.refresh(produto)
+
+        # Depois de tudo executado e antes do return, registra a ação na auditoria
+        AuditoriaService.registrar_acao(
+            db=db,
+            funcionario_id=current_user.id,
+            acao="UPDATE",
+            recurso="PRODUTO",
+            recurso_id=produto.id,
+            dados_antigos=dados_antigos_obj,
+            dados_novos=produto,
+            request=request
+        )
 
         return produto
 
@@ -139,8 +183,11 @@ current_user: ProdutoAuth = Depends(require_group([1]))
 
 
 @router.delete("/produto/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Produto"], summary="Remover produto")
-async def delete_produto(id: int, db: Session = Depends(get_db),
-current_user: ProdutoAuth = Depends(require_group([1]))
+async def delete_produto(
+    request: Request,
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: ProdutoAuth = Depends(require_group([1]))
 ):
     """Remove um produto, precisa estar autenticado e grupo 1"""
     try:
@@ -154,6 +201,18 @@ current_user: ProdutoAuth = Depends(require_group([1]))
 
         db.delete(produto)
         db.commit()
+
+        # Depois de tudo executado e antes do return, registra a ação na auditoria
+        AuditoriaService.registrar_acao(
+            db=db,
+            funcionario_id=current_user.id,
+            acao="DELETE",
+            recurso="PRODUTO",
+            recurso_id=produto.id,
+            dados_antigos=produto,
+            dados_novos=None,
+            request=request
+        )
 
         return None
 

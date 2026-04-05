@@ -76,7 +76,7 @@ async def listar_auditoria(
                 acao=auditoria.acao, recurso=auditoria.recurso, recurso_id=auditoria.recurso_id, dados_antigos=auditoria.dados_antigos, dados_novos=auditoria.dados_novos, ip_address=auditoria.ip_address, user_agent=auditoria.user_agent, data_hora=auditoria.data_hora
             ))
 
-            return result
+        return result
     
     except HTTPException:
         raise
