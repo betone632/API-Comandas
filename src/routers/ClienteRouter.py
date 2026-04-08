@@ -16,7 +16,7 @@ from domain.schemas.AuthSchema import ClienteAuth
 
 # Infra
 from infra.orm.ClienteModel import ClienteDB
-from infra.database import get_db
+from infra.database import get_assync_db
 from infra.dependencies import get_current_active_user, require_group
 
 router = APIRouter()
@@ -26,7 +26,7 @@ router = APIRouter()
 @router.get("/cliente/", response_model=List[ClienteResponse], tags=["Cliente"], status_code=status.HTTP_200_OK)
 async def get_cliente(
     request: Request,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_assync_db),
     current_user: ClienteAuth = Depends(get_current_active_user)
 ):
     """Retorna todos os clientes - Protegido por autenticação"""
@@ -45,7 +45,7 @@ async def get_cliente(
 async def get_cliente(
     request: Request,
     id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_assync_db),
     current_user: ClienteAuth = Depends(get_current_active_user)
 ):
     """Retorna um cliente específico pelo ID"""
@@ -73,7 +73,7 @@ async def get_cliente(
 async def post_cliente(
     request: Request,
     cliente_data: ClienteCreate,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_assync_db),
     current_user: ClienteAuth = Depends(require_group([1,3]))
 ):
     """Cria um novo cliente, precisa estar autenticado e grupo 1 ou 3"""
@@ -129,7 +129,7 @@ async def put_cliente(
     request: Request,
     id: int,
     cliente_data: ClienteUpdate,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_assync_db),
     current_user: ClienteAuth = Depends(require_group([1,3]))
 ):
     """Atualiza um cliente existente, precisa estar autenticado e em grupo 1 ou 3"""
@@ -197,7 +197,7 @@ async def put_cliente(
 async def delete_cliente(
     request: Request,
     id: int,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_assync_db),
     current_user: ClienteAuth = Depends(require_group([1]))
 ):
     """Remove um cliente, precisa autenticação e grupo 1"""

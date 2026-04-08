@@ -6,7 +6,7 @@ from datetime import timedelta
 from domain.schemas.AuthSchema import LoginRequest, TokenResponse, RefreshTokenRequest, FuncionarioAuth
 
 from infra.orm.FuncionarioModel import FuncionarioDB
-from infra.database import get_db
+from infra.database import get_assync_db
 from infra.security import verify_password, create_access_token, create_refresh_token, verify_refresh_token
 from infra.dependencies import get_current_active_user
 
@@ -19,7 +19,7 @@ router = APIRouter()
 
 ###
 @router.post("/auth/login", response_model=TokenResponse, tags=["Autenticação"], summary="Login de funcionário - pública - retorna access e refresh token")
-async def login(request: Request, login_data: LoginRequest, db: Session = Depends(get_db)):
+async def login(request: Request, login_data: LoginRequest, db: Session = Depends(get_assync_db)):
     """
     Realiza login do funcionário e retorna access token e refresh token
     - **cpf**: CPF do funcionário - **senha**: Senha do funcionário
@@ -97,7 +97,7 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
 
 
 @router.post("/auth/refresh", response_model=TokenResponse, tags=["Autenticação"], summary="Refresh token - pública - renova access token")
-async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends(get_db)):
+async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends(get_assync_db)):
     """
     Renova o access token usando um refresh token válido
     - **refresh_token**: Refresh token válido retornado no login
