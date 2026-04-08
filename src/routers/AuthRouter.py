@@ -1,12 +1,13 @@
 #Roberto Antunes Souza
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from datetime import timedelta
 
 from domain.schemas.AuthSchema import LoginRequest, TokenResponse, RefreshTokenRequest, FuncionarioAuth
 
 from infra.orm.FuncionarioModel import FuncionarioDB
-from infra.database import get_assync_db
+from infra.database import get_async_db
 from infra.security import verify_password, create_access_token, create_refresh_token, verify_refresh_token
 from infra.dependencies import get_current_active_user
 
@@ -19,7 +20,7 @@ router = APIRouter()
 
 ###
 @router.post("/auth/login", response_model=TokenResponse, tags=["Autenticação"], summary="Login de funcionário - pública - retorna access e refresh token")
-async def login(request: Request, login_data: LoginRequest, db: Session = Depends(get_assync_db)):
+async def login(request: Request, login_data: LoginRequest, db: AsyncSession = Depends(get_async_db)):
     """
     Realiza login do funcionário e retorna access token e refresh token
     - **cpf**: CPF do funcionário - **senha**: Senha do funcionário
@@ -27,7 +28,10 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
     """
     try:
         # Busca funcionário pelo CPF
-        funcionario = db.query(FuncionarioDB).filter(FuncionarioDB.cpf == login_data.cpf).first()
+        result = await db.execute(
+            select(FuncionarioDB).where(FuncionarioDB.cpf == login_data.cpf)
+        )
+        funcionario = result.scalar_one_or_none()
 
         if not funcionario:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="CPF ou senha inválidos", headers={"WWW-Authenticate": "Bearer"}, )
@@ -57,7 +61,7 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
         )
 
         # Registrar auditoria de login (SUCESSO)
-        AuditoriaService.registrar_acao(
+        await AuditoriaService.registrar_acao(
             db=db,
             funcionario_id=funcionario.id,
             acao="LOGIN",
@@ -78,7 +82,7 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
 
     except HTTPException as e:
         # Registrar tentativa de login inválida
-        AuditoriaService.registrar_acao(
+        await AuditoriaService.registrar_acao(
             db=db,
             funcionario_id=0,
             acao="LOGIN_FAIL",
@@ -97,7 +101,7 @@ async def login(request: Request, login_data: LoginRequest, db: Session = Depend
 
 
 @router.post("/auth/refresh", response_model=TokenResponse, tags=["Autenticação"], summary="Refresh token - pública - renova access token")
-async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends(get_assync_db)):
+async def refresh_token(refresh_data: RefreshTokenRequest, db: AsyncSession = Depends(get_async_db)):
     """
     Renova o access token usando um refresh token válido
     - **refresh_token**: Refresh token válido retornado no login
@@ -109,7 +113,11 @@ async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends
 
         # Busca funcionário para garantir que ainda existe
         cpf = payload.get("sub")
-        funcionario = db.query(FuncionarioDB).filter(FuncionarioDB.cpf == cpf).first()
+
+        result = await db.execute(
+            select(FuncionarioDB).where(FuncionarioDB.cpf == cpf)
+        )
+        funcionario = result.scalar_one_or_none()
 
         if not funcionario:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Funcionário não encontrado", headers={"WWW-Authenticate": "Bearer"}, )
@@ -135,7 +143,7 @@ async def refresh_token(refresh_data: RefreshTokenRequest, db: Session = Depends
         )
 
         # Auditoria de refresh
-        AuditoriaService.registrar_acao(
+        await AuditoriaService.registrar_acao(
             db=db,
             funcionario_id=funcionario.id,
             acao="REFRESH_TOKEN",
@@ -181,7 +189,7 @@ async def logout(request: Request, current_user: FuncionarioAuth = Depends(get_c
     Este endpoint existe apenas para completude da API
     """
     # Auditoria de logout
-    AuditoriaService.registrar_acao(
+    await AuditoriaService.registrar_acao(
         db=None,
         funcionario_id=current_user.id,
         acao="LOGOUT",

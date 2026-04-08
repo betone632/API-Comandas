@@ -17,7 +17,7 @@ from domain.schemas.AuthSchema import ProdutoAuth
 
 # Infra
 from infra.orm.ProdutoModel import ProdutoDB
-from infra.database import get_assync_db
+from infra.database import get_async_db
 from infra.dependencies import get_current_active_user, require_group
 
 router = APIRouter()
@@ -25,7 +25,7 @@ router = APIRouter()
 # Criar as rotas/endpoints: GET, POST, PUT, DELETE
 
 @router.get("/produto/publico", response_model=List[ProdutoResponsePublico], tags=["Produto"], status_code=status.HTTP_200_OK)
-async def get_produto(db: Session = Depends(get_assync_db)):
+async def get_produto(db: Session = Depends(get_async_db)):
     """Retorna todos os produtos de forma publica, sem id e sem valor   """
     try:
         produtos = db.query(ProdutoDB).all()
@@ -40,7 +40,7 @@ async def get_produto(db: Session = Depends(get_assync_db)):
 @router.get("/produto/", response_model=List[ProdutoResponse], tags=["Produto"], status_code=status.HTTP_200_OK)
 async def get_produto(
     request: Request,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: ProdutoAuth = Depends(get_current_active_user)
 ):
     """Retorna todos os produtos, autenticado"""
@@ -59,7 +59,7 @@ async def get_produto(
 async def get_produto(
     request: Request,
     id: int,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: ProdutoAuth = Depends(get_current_active_user)
 ):
     """Retorna um produto específico pelo ID, autenticado"""
@@ -87,7 +87,7 @@ async def get_produto(
 async def post_produto(
     request: Request,
     produto_data: ProdutoCreate,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: ProdutoAuth = Depends(require_group([1]))
 ):
     """Cria um novo produto, autenticado e grupo 1"""
@@ -132,7 +132,7 @@ async def put_produto(
     request: Request,
     id: int,
     produto_data: ProdutoUpdate,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: ProdutoAuth = Depends(require_group([1]))
 ):
     """Atualiza um produto existente, precisa estar autenticado e grupo 1"""
@@ -186,7 +186,7 @@ async def put_produto(
 async def delete_produto(
     request: Request,
     id: int,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: ProdutoAuth = Depends(require_group([1]))
 ):
     """Remove um produto, precisa estar autenticado e grupo 1"""

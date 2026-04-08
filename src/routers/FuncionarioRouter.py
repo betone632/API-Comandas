@@ -16,7 +16,7 @@ from domain.schemas.AuthSchema import FuncionarioAuth
 
 # Infra
 from infra.orm.FuncionarioModel import FuncionarioDB
-from infra.database import get_assync_db
+from infra.database import get_async_db
 from infra.security import get_password_hash
 from infra.dependencies import get_current_active_user, require_group
 
@@ -28,7 +28,7 @@ router = APIRouter()
 @limiter.limit(get_rate_limit("moderate"))
 async def get_funcionario(
     request: Request,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: FuncionarioAuth = Depends(require_group([1]))
 ):
     """Retorna todos os funcionários - protegida por autenticação e grupo 1"""
@@ -46,7 +46,7 @@ async def get_funcionario(
 async def get_funcionario(
 request: Request,
 id: int,
-db: Session = Depends(get_assync_db),
+db: Session = Depends(get_async_db),
 current_user: FuncionarioAuth = Depends(get_current_active_user)
 ):
     """Retorna um funcionário específico pelo ID"""
@@ -68,7 +68,7 @@ current_user: FuncionarioAuth = Depends(get_current_active_user)
 async def post_funcionario(
     request: Request,
     funcionario_data: FuncionarioCreate,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: FuncionarioAuth = Depends(require_group([1]))
 ):
     """Cria um novo funcionário - protegida por autenticação e grupo 1"""
@@ -128,7 +128,7 @@ async def put_funcionario(
     request: Request,
     id: int,
     funcionario_data: FuncionarioUpdate,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: FuncionarioAuth = Depends(require_group([1]))
 ):
     """Atualiza um funcionário existente"""
@@ -196,7 +196,7 @@ async def put_funcionario(
 async def delete_funcionario(
     request: Request,
     id: int,
-    db: Session = Depends(get_assync_db),
+    db: Session = Depends(get_async_db),
     current_user: FuncionarioAuth = Depends(require_group([1]))
 ):
     """Remove um funcionário"""

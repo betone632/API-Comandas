@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from infra.database import get_assync_db
+from infra.database import get_async_db
 from infra.orm.FuncionarioModel import FuncionarioDB
 from infra.security import verify_access_token
 
@@ -15,7 +15,7 @@ security = HTTPBearer()
 # Dependency para validar token e retornar usuário atual
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_assync_db)
+    db: Session = Depends(get_async_db)
 ) -> FuncionarioAuth:
     """Dependency que valida o token e retorna o usuário atual"""
 

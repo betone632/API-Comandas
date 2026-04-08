@@ -9,7 +9,7 @@ from domain.schemas.AuditoriaSchema import AuditoriaResponse
 from domain.schemas.AuthSchema import FuncionarioAuth
 from infra.orm.AuditoriaModel import AuditoriaDB
 from infra.orm.FuncionarioModel import FuncionarioDB
-from infra.database import get_assync_db
+from infra.database import get_async_db
 from infra.dependencies import require_group, get_current_active_user
 from infra.rate_limit import limiter, get_rate_limit
 
@@ -26,7 +26,7 @@ async def listar_auditoria(
     data_fim: Optional[str] = Query(None, description="Data fim (YYYY-MM-DD)"),
     skip: int = Query(0, ge=0, description="Número de registros para pular"),
     limite: int = Query(100, ge=1, le=1000, description="Limite de registros"),
-    db: Session = Depends(get_assync_db), current_user: FuncionarioAuth = Depends(require_group([1]))
+    db: Session = Depends(get_async_db), current_user: FuncionarioAuth = Depends(require_group([1]))
 ):
     """
     Lista registros de auditoria com filtros opcionais. - Apenas administradores podem acessar.
@@ -87,7 +87,7 @@ async def listar_auditoria(
 @limiter.limit(get_rate_limit("light"))
 async def listar_acoes_disponiveis(
     request: Request,
-    db: Session = Depends(get_assync_db), current_user: FuncionarioAuth = Depends(require_group([1]))
+    db: Session = Depends(get_async_db), current_user: FuncionarioAuth = Depends(require_group([1]))
 ):
     """
     Lista os tipos de ações e recursos disponíveis para filtro.
