@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from settings import HOST, PORT, RELOAD
 from infra.rate_limit import limiter, rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from fastapi import FastAPI 
+from fastapi.middleware.cors import CORSMiddleware
+from settings import HOST, PORT, RELOAD, CORS_ORIGINS
 import uvicorn
 
 # import das classes com as rotas/endpoints
@@ -29,6 +32,17 @@ async def lifespan(app: FastAPI):
 
 # cria a aplicação FastAPI com o contexto de vida
 app = FastAPI(lifespan=lifespan)
+
+# Configuração de CORS - Impede erros quando um Frontend moderno, tipo React/Vue, tenta conectar
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=False if "*" in CORS_ORIGINS else True, # Não permite credenciais (cookies, auth headers) se origem for *
+    allow_methods=["GET", "POST", "PUT", "DELETE"], # Métodos específicos - * para permitir todos
+    allow_headers=["Content-Type", "Authorization"], # Headers específicos - * para permitir todos
+    expose_headers=["*"], # Expõe headers para debug
+    max_age=600, # Cache de preflight por 10 minutos
+)
 
 #app = FastAPI() # Configuração de Rate Limiting
 app.state.limiter = limiter
